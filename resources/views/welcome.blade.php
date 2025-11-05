@@ -3,5 +3,5 @@
 @section('title'. 'Blog | Avaleht ')
 
 @section('content')
-Test
+Test <i class="fa-solid fa-hourglass-start"></i>
 @endsection
