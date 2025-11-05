@@ -45,9 +45,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $author = Role::firstOrCreate(['name' => 'Author']);
 
         //Rollidele õiguste määramine
-        $admin->syncPermission(Permission::all());
+        $admin->syncPermissions(Permission::all());
 
-        $moderator -> syncPermission ([
+        $moderator -> syncPermissions ([
             'posts.create',
             'posts.update.own',
             'posts.update.any',
@@ -60,7 +60,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'tags.manage',
         ]);
 
-        $author -> syncPermission ([
+        $author -> syncPermissions ([
             'posts.create',
             'posts.update.own',
             'posts.delete.own',
