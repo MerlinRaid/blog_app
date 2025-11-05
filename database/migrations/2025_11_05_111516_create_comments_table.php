@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->foreignId('post_id')->constrained()->cascadeOnDelete();
             //Kommenteerida saavad ainult sisseloginud kasutajad -> FK requires (foreign key)
-            $table->string('user_id') ->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id') ->constrained()->cascadeOnDelete();
 
             $table->text('body');
             $table->enum('status', ['pending', 'approved','hidden', 'spam'])->default('pending') -> index();
