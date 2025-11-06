@@ -20,7 +20,7 @@
                         <br>
                         <small>{{ $post->author->name }} – {{ $post->updated_at->format('d.m.Y H:i') }}</small>
                     </div>
-                    {{-- <a href="{{ route('admin.posts.edit', $post) }}" class="btn btn-sm btn-primary"> --}}
+                    <a href="{{ route('admin.posts.edit', $post) }}" class="btn btn-sm btn-primary">
                         Ava
                     </a>
                 </li>
@@ -73,12 +73,17 @@
         @else
             <ul class="list-group">
                 @foreach($pendingComments as $comment)
+                @if($comment->post)
                 <li class="list-group-item">
                     {{ Str::limit($comment->comment, 60) }}<br>
                     <small>
                         {{ $comment->author->name ?? 'Anonüümne' }},
                         {{ $comment->created_at->format('d.m.Y H:i') }},
-                        {{-- post: <a href="{{ route('admin.posts.edit', $comment->post) }}">{{ $comment->post->title }}</a> --}}
+                            post: <a href="{{ route('admin.posts.edit', $comment->post) }}">{{ $comment->post->title }}</a>
+                        @else
+                            <span class="text-muted">Postitus puudub</span>
+                        @endif
+
                     </small>
                 </li>
                 @endforeach

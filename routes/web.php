@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Route;
@@ -24,5 +25,11 @@ Route::post('/blog/{slug}/comments', [CommentController::class, 'store'])
 //Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth','role:Admin|Moderator'])->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+//Postitused CRUD
+    Route::resource('posts', PostController::class) -> except(['show']);
+//Kiirtegevused publish ja unpublish
+    Route::patch('/posts/{post}/publish', [PostController::class, 'publish'])->name('posts.publish');
+    Route::patch('/posts/{post}/unpublish', [PostController::class, 'unpublish'])->name('posts.unpublish');
 
 });
