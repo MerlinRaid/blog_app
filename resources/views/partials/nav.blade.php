@@ -48,7 +48,7 @@
                         <li><a class="dropdown-item" href="{{ route('admin.posts.create') }}">+ Uus postitus</a></li>
                         <li><a class="dropdown-item" href="{{ route('admin.comments.index') }}">Kommentaarid</a></li>
                         <li><a class="dropdown-item" href="{{ route('admin.categories.index') }}">Kategooriad</a></li>
-                        {{-- <li><a class="dropdown-item" href="{{ route('admin.tags.index') }}">Sildid</a></li> --}}
+                        <li><a class="dropdown-item" href="{{ route('admin.tags.index') }}">Sildid</a></li>
 
                         {{-- Kasutajate haldus ainult Adminile --}}
                         @role('Admin')
