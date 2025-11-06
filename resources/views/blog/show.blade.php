@@ -60,10 +60,10 @@
     @auth
         <form action="{{ route('comments.store', $post->slug) }}" method="post" class="stack" style="margin-top:.5rem">
             @csrf
-            <label for="body">Lisa kommentaar (min 50 märki)</label>
+            <label for="body">Lisa kommentaar (min 5 märki)</label>
             <textarea name="body" id="body" rows="4"
                 @error('body') class="invalid" @enderror
-                minlength="50" required>{{ old('body') }}</textarea>
+                minlength="5" required>{{ old('body') }}</textarea>
             @error('body')
                 <div class="muted" role="alert">{{ $message }}</div>
             @enderror

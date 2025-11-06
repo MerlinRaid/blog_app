@@ -81,7 +81,7 @@ class PostController extends Controller
         $post = Post::create($data);
         $post->tags()->sync($request->input('tag_ids', []));
 
-        return redirect()->route('admin.posts.edit', $post)
+        return redirect()->route('admin.posts.index', $post)
             ->with('status', 'Postitus lisatud!');
     }
 
@@ -157,7 +157,7 @@ class PostController extends Controller
         //Sildid
         $post->tags()->sync($tagIds);
 
-        return redirect()->route('admin.posts.edit', $post)
+        return redirect()->route('admin.posts.index', $post)
             ->with('status', 'Postitus uuendatud!');
 
     }
@@ -170,6 +170,7 @@ class PostController extends Controller
         if($post->featured_image){
             Storage::disk('public')->delete($post->featured_image);
         }
+        $post->comments()->delete();
         $post->delete();
         return redirect()->route('admin.posts.index')
             ->with('status', 'Postitus kustutatud!');

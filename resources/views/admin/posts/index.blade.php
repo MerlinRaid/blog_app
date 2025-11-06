@@ -2,6 +2,11 @@
 @section('title','Postitused – Admin')
 
 @section('content')
+@if (session('status'))
+    <div class="alert alert-success" role="alert">
+        {{ session('status') }}
+    </div>
+@endif
 <h1>Postitused</h1>
 
 <div class="stack" style="margin-bottom:12px">

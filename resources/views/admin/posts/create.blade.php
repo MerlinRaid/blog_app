@@ -55,6 +55,6 @@
     </label>
 
 
-    <button class="btn btn-primary">Salvesta</button>
+    <button class="btn btn-primary" href="{{ route('admin.posts.index') }}">Salvesta</button>
 </form>
 @endsection

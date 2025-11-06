@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CommentController;
@@ -32,4 +33,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','role:Admin|Moderator
     Route::patch('/posts/{post}/publish', [PostController::class, 'publish'])->name('posts.publish');
     Route::patch('/posts/{post}/unpublish', [PostController::class, 'unpublish'])->name('posts.unpublish');
 
+//Kommentaarid
+    Route::get('/comments', [CommentModerationController::class, 'index'])->name('comments.index');
+    Route::patch('/comments/{comment}/status', [CommentModerationController::class, 'updateStatus'])->name('comments.updateStatus');
+    Route::delete('/comments/{comment}', [CommentModerationController::class, 'destroy'])->name('comments.destroy');
 });
