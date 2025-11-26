@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\TagController;
+use App\Http\Controllers\Author\AuthorDashboardController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Route;
@@ -45,4 +46,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','role:Admin|Moderator
 
 //Sildid CRUD
     Route::resource('tags', TagController::class) -> except(['show']);
+});
+
+//Author routes
+Route::prefix('author')->name('author.')->middleware(['auth','role:Author|Admin'])->group(function () {
+    Route::get('/', [AuthorDashboardController::class, 'index'])->name('dashboard');
+
+    Route::resource('posts', \App\Http\Controllers\Author\PostController::class) -> except(['show']);
 });

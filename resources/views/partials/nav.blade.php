@@ -14,7 +14,7 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('blog.index') }}">Blogi</a></li>
 
                 {{-- Authori lühitee (enda postitused) --}}
-                {{-- @role('Author')
+                @role('Author')
                     <li class="nav-item dropdown">
                     <a id="authorDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
@@ -26,7 +26,7 @@
                         <li><a class="dropdown-item" href="{{ route('author.posts.create') }}">+ Uus postitus</a></li>
                     </ul>
                     </li>
-                @endrole --}}
+                @endrole
 
 
                 {{-- Moderatorile (ja Adminile) sisuhaldus – kui soovid moderaatorile ka oma ala teha, lisa siia viide --}}
@@ -111,7 +111,7 @@
                             @endrole
 
                             @role('Author')
-                                <a class="dropdown-item" href="{{ url('/dashboard') }}">Minu postitused</a>
+                                <a class="dropdown-item" href="{{ url('/author/posts') }}">Minu postitused</a>
                             @endrole
 
                             <div class="dropdown-divider"></div>

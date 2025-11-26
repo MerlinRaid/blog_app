@@ -2,9 +2,8 @@
 @section('title', 'Admin – Avaleht')
 
 @section('content')
-<h1 class="mb-4">Admin paneel</h1>
-
-<div class="row g-4">
+<h1> {{ Auth::user()->name }} paneel</h1>
+                    
 
     {{-- Needs action --}}
     <div class="col-md-6">
