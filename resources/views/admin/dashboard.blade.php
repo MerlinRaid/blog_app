@@ -6,16 +6,17 @@
 
 <div class="row g-4">
 
-    {{-- Komponentide loetelu --}}
     @php
         $sections = [
             ['title' => 'Vajab ülevaatust', 'items' => $needsAction, 'empty' => 'Kõik korras.', 'type' => 'posts'],
             ['title' => 'Planeeritud postitused', 'items' => $scheduled, 'empty' => 'Pole planeeritud postitusi.', 'type' => 'posts'],
-            ['title' => 'Hiljuti avaldatud', 'items' => $recent, 'empty' => 'Hiljuti pole avaldatud.', 'type' => 'posts'],
+            ['title' => 'Hiljuti avaldatud', 'items' => $recent, 'empty' => 'Hiljuti pole avaldatud.', 'type' => 'recent'],
             ['title' => 'Kommentaarid – ootel', 'items' => $pendingComments, 'empty' => 'Pole ootel kommentaare.', 'type' => 'comments'],
             ['title' => 'Arhiveeritud postitused', 'items' => $archived, 'empty' => 'Pole arhiveeritud postitusi.', 'type' => 'posts'],
             ['title' => 'Orvuks jäänud kommentaarid', 'items' => $orphanedComments, 'empty' => 'Pole orvuks jäänud kommentaare.', 'type' => 'orphaned'],
-            ['title' => 'Prügikast', 'items' => $trashed, 'empty' => 'Prügikast on tühi.', 'type' => 'trash'],
+             ['title' => 'Postituste prügikast', 'items' => $trashed, 'empty' => 'Postituste prügikast on tühi.', 'type' => 'trash'],
+            ['title' => 'Kommentaaride prügikast', 'items' => $trashedComments, 'empty' => 'Kommentaaride prügikast on tühi.', 'type' => 'comment_trash'],
+           
         ];
     @endphp
 
@@ -34,27 +35,41 @@
                         @foreach($section['items']->take(5) as $item)
                             @switch($section['type'])
 
-                            {{-- Postitused --}}
+                            {{-- POSTITUSED --}}
                             @case('posts')
                             <li class="list-group-item d-flex justify-content-between align-items-start">
                                 <div>
                                     <div class="fw-semibold">{{ $item->title }}</div>
                                     <small class="text-muted">
                                         {{ $item->author->name }} –
-                                        {{ $item->updated_at?->format('d.m.Y H:i') ?? $item->published_at?->format('d.m.Y H:i') }}
-                                        @if($item->status)
-                                            <span class="badge bg-secondary ms-2">{{ $item->status }}</span>
-                                        @endif
+                                        {{ $item->published_at?->format('d.m.Y H:i') ?? $item->updated_at?->format('d.m.Y H:i') }}
+                                        <span class="badge bg-secondary ms-2">{{ $item->status }}</span>
                                     </small>
                                 </div>
-                                <a href="{{ route('admin.posts.edit', $item) }}" class="btn btn-sm btn-outline-primary">Muuda</a>
+                                <a href="{{ route('admin.posts.edit', $item) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-edit"></i> Muuda
+                                </a>
                             </li>
                             @break
 
-                            {{-- Kommentaarid --}}
+                            {{-- HILJUTI AVALDATUD (ilma nuputa) --}}
+                            @case('recent')
+                            <li class="list-group-item">
+                                <div class="fw-semibold">{{ $item->title }}</div>
+                                <small class="text-muted">
+                                    {{ $item->author->name }} –
+                                    {{ $item->published_at->format('d.m.Y H:i') }}
+                                    <span class="badge bg-secondary ms-2">{{ $item->status }}</span>
+                                </small>
+                            </li>
+                            @break
+
+                            {{-- KOMMENTAARID --}}
                             @case('comments')
                             <li class="list-group-item">
-                                <div class="fw-semibold">{{ Str::limit($item->comment, 30) }}</div>
+                                <div class="fw-semibold">
+                                    {{ Str::limit($item->body ?? '-', 30) }}
+                                </div>
                                 <small class="text-muted d-block">
                                     {{ $item->author->name ?? 'Anonüümne' }},
                                     {{ $item->created_at->format('d.m.Y H:i') }}
@@ -66,64 +81,103 @@
                                 </small>
                                 <div class="mt-2 d-flex flex-wrap gap-1">
                                     @foreach(['approved', 'hidden', 'spam', 'pending'] as $status)
-                                        <button class="btn btn-sm btn-outline-secondary">{{ ucfirst($status) }}</button>
+                                        <form action="{{ route('admin.comments.updateStatus', $item) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <input type="hidden" name="status" value="{{ $status }}">
+                                            <button class="btn btn-sm btn-outline-secondary">
+                                                {{ ucfirst($status) }}
+                                            </button>
+                                        </form>
                                     @endforeach
-                                    @if(Auth::user()->is_admin)
-                                        <button class="btn btn-sm btn-danger">Kustuta</button>
-                                    @endif
+                                    @role('Admin')
+                                    <form action="{{ route('admin.comments.destroy', $item) }}" method="post" onsubmit="return confirm('Kustutada kommentaar?')">
+                                        @csrf
+                                        @method('delete')
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="fa fa-trash"></i> Kustuta
+                                        </button>
+                                    </form>
+                                    @endrole
                                 </div>
                             </li>
                             @break
 
-                            {{-- Orvuks jäänud kommentaarid --}}
-                                @case('orphaned')
-<li class="list-group-item">
-    <div class="text-danger mb-1">Seos postitusega puudub!</div>
-    <div>{{ $item->body }}</div>
-    <small class="d-block text-muted mt-1">
-        {{ $item->author->name ?? 'Anonüümne' }},
-        {{ $item->created_at->format('d.m.Y H:i') }}
-    </small>
-    @if(Auth::user()->is_admin)
-        <button class="btn btn-sm btn-danger mt-2">Kustuta</button>
-    @endif
-</li>
-@break
+                            {{-- ORVUKS JÄÄNUD KOMMENTAARID --}}
+                            @case('orphaned')
+                            <li class="list-group-item">
+                                <div class="text-danger mb-1">Seos postitusega puudub!</div>
+                                <div>{{ $item->body }}</div>
+                                <small class="d-block text-muted mt-1">
+                                    {{ $item->author->name ?? 'Anonüümne' }},
+                                    {{ $item->created_at->format('d.m.Y H:i') }}
+                                </small>
+                                @role('Admin')
+                                <form action="{{ route('admin.comments.destroy', $item) }}" method="post" class="mt-2" onsubmit="return confirm('Kustutada kommentaar?')">
+                                    @csrf
+                                    @method('delete')
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fa fa-trash"></i> Kustuta
+                                    </button>
+                                </form>
+                                @endrole
+                            </li>
+                            @break
 
+                            {{-- KOMMENTAARIDE PRÜGIKAST --}}
+                            @case('comment_trash')
+                            <li class="list-group-item">
+                                <div class="fw-semibold">{{ Str::limit($item->body, 60) }}</div>
+                                <small class="text-muted d-block">
+                                    {{ $item->author->name ?? 'Anonüümne' }},
+                                    kustutatud: {{ $item->deleted_at->format('d.m.Y H:i') }}
+                                </small>
+                                @role('Admin')
+                                <div class="mt-2 d-flex gap-2">
+                                    <form action="{{ route('admin.comments.restore', $item->id) }}" method="POST">
+                                        @csrf @method('PATCH')
+                                        <button class="btn btn-sm btn-success" onclick="return confirm('Taasta kommentaar?')">
+                                            <i class="fa fa-undo"></i> Taasta
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.comments.forceDelete', $item->id) }}" method="POST">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Kustuta jäädavalt?')">
+                                            <i class="fa fa-trash"></i> Kustuta jäädavalt
+                                        </button>
+                                    </form>
+                                </div>
+                                @endrole
+                            </li>
+                            @break
+
+                            {{-- POSTITUSTE PRÜGIKAST --}}
                             @case('trash')
-<li class="list-group-item">
-    <div class="fw-semibold">{{ $item->title }}</div>
-    <small class="text-muted d-block">
-        {{ $item->author->name }},
-        loodud: {{ $item->created_at->format('d.m.Y H:i') }},
-        muudetud: {{ $item->updated_at->format('d.m.Y H:i') }},
-        kustutatud: {{ $item->deleted_at->format('d.m.Y H:i') }}
-    </small>
-
-    {{-- Taasta ja kustuta jäädavalt nupud --}}
-    <div class="mt-2 d-flex gap-2">
-
-        {{-- Taasta --}}
-        <form action="{{ route('admin.posts.restore', $item->id) }}" method="post">
-            @csrf
-            @method('patch')
-            <button class="btn btn-sm btn-success" onclick="return confirm('Taasta postitus?')">
-                Taasta
-            </button>
-        </form>
-
-        {{-- Kustuta jäädavalt --}}
-        <form action="{{ route('admin.posts.forceDelete', $item->id) }}" method="post">
-            @csrf
-            @method('delete')
-            <button class="btn btn-sm btn-danger" onclick="return confirm('Kustuta jäädavalt?')">
-                Kustuta jäädavalt
-            </button>
-        </form>
-
-    </div>
-</li>
-@break
+                            <li class="list-group-item">
+                                <div class="fw-semibold">{{ $item->title }}</div>
+                                <small class="text-muted d-block">
+                                    {{ $item->author->name }},
+                                    loodud: {{ $item->created_at->format('d.m.Y H:i') }},
+                                    muudetud: {{ $item->updated_at->format('d.m.Y H:i') }},
+                                    kustutatud: {{ $item->deleted_at->format('d.m.Y H:i') }}
+                                </small>
+                                @role('Admin')
+                                <div class="mt-2 d-flex gap-2">
+                                    <form action="{{ route('admin.posts.restore', $item->id) }}" method="POST">
+                                        @csrf @method('PATCH')
+                                        <button class="btn btn-sm btn-success" onclick="return confirm('Taasta postitus?')">
+                                            <i class="fa fa-undo"></i> Taasta
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.posts.forceDelete', $item->id) }}" method="POST">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Kustuta jäädavalt?')">
+                                            <i class="fa fa-trash"></i> Kustuta jäädavalt
+                                        </button>
+                                    </form>
+                                </div>
+                                @endrole
+                            </li>
+                            @break
 
                             @endswitch
                         @endforeach

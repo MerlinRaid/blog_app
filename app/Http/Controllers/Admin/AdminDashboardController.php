@@ -55,6 +55,11 @@ class AdminDashboardController extends Controller
         ->latest('deleted_at')
         ->limit(10)
         ->get();
+
+    $trashedComments = Comment::with('author')
+    ->onlyTrashed()
+    ->latest('deleted_at')
+    ->get();
         
           return view('admin.dashboard', compact(
         'needsAction',
@@ -63,7 +68,8 @@ class AdminDashboardController extends Controller
         'pendingComments',
         'archived',
         'orphanedComments',
-        'trashed'
+        'trashed',
+        'trashedComments'
     ));
     }
 }
