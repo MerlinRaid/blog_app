@@ -170,7 +170,7 @@ class PostController extends Controller
         if($post->featured_image){
             Storage::disk('public')->delete($post->featured_image);
         }
-        $post->comments()->delete();
+        
         $post->delete();
         return redirect()->route('admin.posts.index')
             ->with('status', 'Postitus kustutatud!');
@@ -202,4 +202,18 @@ class PostController extends Controller
 
         return back()->with('status', 'Eemaldatud avaldatud postituste hulgast!');
     }
+    public function restore($id) {
+        $post = Post::onlyTrashed()->findOrFail($id);
+        $this->authorize('restore', $post); //Policy: ainult admin
+        $post->restore();
+        return back()->with('status', 'Postitus taastatud.');
+    }
+
+    public function forceDelete($id) {
+        $post = Post::withTrashed()->findOrFail($id);
+        $this->authorize('forceDelete', $post); //Policy: ainult admin
+        $post->forceDelete(); #Kui post ei kausta SoftDelete, siis ->delete()
+        return back()->with('status', 'Postitus jäädavalt kustutatud.');
+    }
+
 }

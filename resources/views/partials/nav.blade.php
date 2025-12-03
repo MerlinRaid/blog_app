@@ -53,7 +53,7 @@
                         {{-- Kasutajate haldus ainult Adminile --}}
                         @role('Admin')
                             <li><hr class="dropdown-divider"></li>
-                            {{-- <li><a class="dropdown-item" href="{{ route('admin.users.index') }}">Kasutajad</a></li> --}}
+                            <li><a class="dropdown-item" href="{{ route('admin.users.index') }}">Kasutajad</a></li>
                         @endrole
                     </ul>
                 </li>
