@@ -2,93 +2,137 @@
 @section('title', 'Admin – Avaleht')
 
 @section('content')
-<h1> {{ Auth::user()->name }} paneel</h1>
-                    
+<h1 class="mb-4">{{ Auth::user()->name }} paneel</h1>
 
-    {{-- Needs action --}}
+<div class="row g-4">
+
+    {{-- Komponentide loetelu --}}
+    @php
+        $sections = [
+            ['title' => 'Vajab ülevaatust', 'items' => $needsAction, 'empty' => 'Kõik korras.', 'type' => 'posts'],
+            ['title' => 'Planeeritud postitused', 'items' => $scheduled, 'empty' => 'Pole planeeritud postitusi.', 'type' => 'posts'],
+            ['title' => 'Hiljuti avaldatud', 'items' => $recent, 'empty' => 'Hiljuti pole avaldatud.', 'type' => 'posts'],
+            ['title' => 'Kommentaarid – ootel', 'items' => $pendingComments, 'empty' => 'Pole ootel kommentaare.', 'type' => 'comments'],
+            ['title' => 'Arhiveeritud postitused', 'items' => $archived, 'empty' => 'Pole arhiveeritud postitusi.', 'type' => 'posts'],
+            ['title' => 'Orvuks jäänud kommentaarid', 'items' => $orphanedComments, 'empty' => 'Pole orvuks jäänud kommentaare.', 'type' => 'orphaned'],
+            ['title' => 'Prügikast', 'items' => $trashed, 'empty' => 'Prügikast on tühi.', 'type' => 'trash'],
+        ];
+    @endphp
+
+    @foreach($sections as $section)
     <div class="col-md-6">
-        <h4>Vajab ülevaatust</h4>
-        @if($needsAction->isEmpty())
-            <div class="text-muted">Kõik korras.</div>
-        @else
-            <ul class="list-group">
-                @foreach($needsAction as $post)
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>{{ $post->title }}</strong>
-                        <br>
-                        <small>{{ $post->author->name }} – {{ $post->updated_at->format('d.m.Y H:i') }}</small>
-                    </div>
-                    <a href="{{ route('admin.posts.edit', $post) }}" class="btn btn-sm btn-primary">
-                        Ava
-                    </a>
-                </li>
-                @endforeach
-            </ul>
-        @endif
-    </div>
+        <div class="card h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ $section['title'] }}</h5>
+                <small class="text-muted">{{ $section['items']->count() }} kokku</small>
+            </div>
+            <div class="card-body">
+                @if($section['items']->isEmpty())
+                    <div class="text-muted">{{ $section['empty'] }}</div>
+                @else
+                    <ul class="list-group list-group-flush">
+                        @foreach($section['items']->take(5) as $item)
+                            @switch($section['type'])
 
-    {{-- Scheduled --}}
-    <div class="col-md-6">
-        <h4>Planeeritud</h4>
-        @if($scheduled->isEmpty())
-            <div class="text-muted">Pole planeeritud postitusi.</div>
-        @else
-            <ul class="list-group">
-                @foreach($scheduled as $post)
-                <li class="list-group-item">
-                    <strong>{{ $post->title }}</strong>
-                    <br>
-                    <small>Publitseeritakse: {{ $post->published_at->format('d.m.Y H:i') }}</small>
-                </li>
-                @endforeach
-            </ul>
-        @endif
-    </div>
+                            {{-- Postitused --}}
+                            @case('posts')
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">{{ $item->title }}</div>
+                                    <small class="text-muted">
+                                        {{ $item->author->name }} –
+                                        {{ $item->updated_at?->format('d.m.Y H:i') ?? $item->published_at?->format('d.m.Y H:i') }}
+                                        @if($item->status)
+                                            <span class="badge bg-secondary ms-2">{{ $item->status }}</span>
+                                        @endif
+                                    </small>
+                                </div>
+                                <a href="{{ route('admin.posts.edit', $item) }}" class="btn btn-sm btn-outline-primary">Muuda</a>
+                            </li>
+                            @break
 
-    {{-- Recent published --}}
-    <div class="col-md-6">
-        <h4>Hiljuti avaldatud</h4>
-        @if($recent->isEmpty())
-            <div class="text-muted">Hiljuti pole avaldatud.</div>
-        @else
-            <ul class="list-group">
-                @foreach($recent as $post)
-                <li class="list-group-item">
-                    <strong>{{ $post->title }}</strong>
-                    <br>
-                    <small>{{ $post->author->name }} – {{ $post->published_at->format('d.m.Y H:i') }}</small>
-                </li>
-                @endforeach
-            </ul>
-        @endif
-    </div>
+                            {{-- Kommentaarid --}}
+                            @case('comments')
+                            <li class="list-group-item">
+                                <div class="fw-semibold">{{ Str::limit($item->comment, 30) }}</div>
+                                <small class="text-muted d-block">
+                                    {{ $item->author->name ?? 'Anonüümne' }},
+                                    {{ $item->created_at->format('d.m.Y H:i') }}
+                                    @if($item->post)
+                                        – <a href="{{ route('admin.posts.edit', $item->post) }}">{{ $item->post->title }}</a>
+                                    @else
+                                        – <span class="text-danger">Postitus puudub</span>
+                                    @endif
+                                </small>
+                                <div class="mt-2 d-flex flex-wrap gap-1">
+                                    @foreach(['approved', 'hidden', 'spam', 'pending'] as $status)
+                                        <button class="btn btn-sm btn-outline-secondary">{{ ucfirst($status) }}</button>
+                                    @endforeach
+                                    @if(Auth::user()->is_admin)
+                                        <button class="btn btn-sm btn-danger">Kustuta</button>
+                                    @endif
+                                </div>
+                            </li>
+                            @break
 
-    {{-- Pending comments --}}
-    <div class="col-md-6">
-        <h4>Kommentaarid – ootel</h4>
-        @if($pendingComments->isEmpty())
-            <div class="text-muted">Pole ootel kommentaare.</div>
-        @else
-            <ul class="list-group">
-                @foreach($pendingComments as $comment)
-                @if($comment->post)
-                <li class="list-group-item">
-                    {{ Str::limit($comment->comment, 60) }}<br>
-                    <small>
-                        {{ $comment->author->name ?? 'Anonüümne' }},
-                        {{ $comment->created_at->format('d.m.Y H:i') }},
-                            post: <a href="{{ route('admin.posts.edit', $comment->post) }}">{{ $comment->post->title }}</a>
-                        @else
-                            <span class="text-muted">Postitus puudub</span>
-                        @endif
+                            {{-- Orvuks jäänud kommentaarid --}}
+                                @case('orphaned')
+<li class="list-group-item">
+    <div class="text-danger mb-1">Seos postitusega puudub!</div>
+    <div>{{ $item->body }}</div>
+    <small class="d-block text-muted mt-1">
+        {{ $item->author->name ?? 'Anonüümne' }},
+        {{ $item->created_at->format('d.m.Y H:i') }}
+    </small>
+    @if(Auth::user()->is_admin)
+        <button class="btn btn-sm btn-danger mt-2">Kustuta</button>
+    @endif
+</li>
+@break
 
-                    </small>
-                </li>
-                @endforeach
-            </ul>
-        @endif
+                            @case('trash')
+<li class="list-group-item">
+    <div class="fw-semibold">{{ $item->title }}</div>
+    <small class="text-muted d-block">
+        {{ $item->author->name }},
+        loodud: {{ $item->created_at->format('d.m.Y H:i') }},
+        muudetud: {{ $item->updated_at->format('d.m.Y H:i') }},
+        kustutatud: {{ $item->deleted_at->format('d.m.Y H:i') }}
+    </small>
+
+    {{-- Taasta ja kustuta jäädavalt nupud --}}
+    <div class="mt-2 d-flex gap-2">
+
+        {{-- Taasta --}}
+        <form action="{{ route('admin.posts.restore', $item->id) }}" method="post">
+            @csrf
+            @method('patch')
+            <button class="btn btn-sm btn-success" onclick="return confirm('Taasta postitus?')">
+                Taasta
+            </button>
+        </form>
+
+        {{-- Kustuta jäädavalt --}}
+        <form action="{{ route('admin.posts.forceDelete', $item->id) }}" method="post">
+            @csrf
+            @method('delete')
+            <button class="btn btn-sm btn-danger" onclick="return confirm('Kustuta jäädavalt?')">
+                Kustuta jäädavalt
+            </button>
+        </form>
+
     </div>
+</li>
+@break
+
+                            @endswitch
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endforeach
 
 </div>
 @endsection

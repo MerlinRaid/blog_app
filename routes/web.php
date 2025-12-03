@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\TagController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Author\AuthorDashboardController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CommentController;
@@ -40,6 +41,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','role:Admin|Moderator
     Route::get('/comments', [CommentModerationController::class, 'index'])->name('comments.index');
     Route::patch('/comments/{comment}/status', [CommentModerationController::class, 'updateStatus'])->name('comments.updateStatus');
     Route::delete('/comments/{comment}', [CommentModerationController::class, 'destroy'])->name('comments.destroy');
+
+    Route::resource('users', UserController::class) -> except(['show'])-> middleware('role:Admin');
+
+//Kodutöö taasta ja force delete
+    Route::patch('comments/{comment}/restore', [CommentModerationController::class, 'restore'])->name('comments.restore')->middleware('role:Admin'); //taastamine ainult Admin
+    Route::delete('comments/{comment}/force', [CommentModerationController::class, 'forceDelete'])->name('comments.forceDelete') ->middleware('role:Admin'); //jäädavalt kustutada ainult Admin
+
+    Route::patch('posts/{post}/restore', [PostController::class, 'restore'])->name('posts.restore')->middleware('role:Admin'); //taastamine ainult Admin
+    Route::delete('posts/{post}/force', [PostController::class, 'forceDelete'])->name('posts.forceDelete') ->middleware('role:Admin'); //jäädavalt kustutada ainult Admin
 
 //Kategooriad CRUD
     Route::resource('categories', CategoryController::class) -> except(['show']);

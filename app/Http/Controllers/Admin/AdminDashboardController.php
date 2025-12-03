@@ -34,7 +34,37 @@ class AdminDashboardController extends Controller
             ->latest()
             ->limit(10)
             ->get();
+
+    // Arhiveeritud postitused
+    $archived = Post::with('author')
+        ->where('status', 'archived')
+        ->latest('updated_at')
+        ->limit(10)
+        ->get();
+
+    // Orvuks jäänud kommentaarid (ilma seotud postituseta)
+    $orphanedComments = Comment::with('author')
+        ->doesntHave('post')
+        ->latest()
+        ->limit(10)
+        ->get();
+
+    // Prügikast (soft-deleted)
+    $trashed = Post::with('author')
+        ->onlyTrashed()
+        ->latest('deleted_at')
+        ->limit(10)
+        ->get();
         
-        return view('admin.dashboard', compact('needsAction', 'scheduled', 'recent', 'pendingComments'));
+          return view('admin.dashboard', compact(
+        'needsAction',
+        'scheduled',
+        'recent',
+        'pendingComments',
+        'archived',
+        'orphanedComments',
+        'trashed'
+    ));
     }
 }
+

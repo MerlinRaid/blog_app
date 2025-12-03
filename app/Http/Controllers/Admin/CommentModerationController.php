@@ -40,9 +40,21 @@ class CommentModerationController extends Controller
     public function destroy(Comment $comment)
     {   
         //Ainult adminnil on lubatud kustutada
-        $this->authorize('delete', $comment);
-
         $comment->delete();
         return back()->with('status', 'Kommentaar kustutatud.');
+    }
+
+    public function restore($id) {
+        $comment = Comment::onlyTrashed()->findOrFail($id);
+        $this->authorize('restore', $comment); //Policy: ainult admin
+        $comment->restore();
+        return back()->with('status', 'Kommentaar taastatud.');
+    }
+
+    public function forceDelete($id) {
+        $comment = Comment::withTrashed()->findOrFail($id);
+        $this->authorize('forceDelete', $comment); //Policy: ainult admin
+        $comment->forceDelete(); #Kui comment ei kausta SoftDelete, siis ->delete()
+        return back()->with('status', 'Kommentaar jäädavalt kustutatud.');
     }
 }
